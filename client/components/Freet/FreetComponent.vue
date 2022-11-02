@@ -52,6 +52,18 @@
       Posted at {{ freet.dateModified }}
       <i v-if="freet.edited">(edited)</i>
     </p>
+    <button
+        v-if="!liked"
+        @click="likeFreet"
+    >
+      Like this Freet!
+    </button>
+    <button
+        v-else
+        @click="likeFreet"
+    >
+      💙 Freet has been liked!
+    </button>
     <section class="alerts">
       <article
         v-for="(status, alert, index) in alerts"
@@ -76,6 +88,7 @@ export default {
   },
   data() {
     return {
+      liked: false,
       editing: false, // Whether or not this freet is in edit mode
       draft: this.freet.content, // Potentially-new content for this freet
       alerts: {} // Displays success/error messages encountered during freet modification
@@ -131,6 +144,21 @@ export default {
         }
       };
       this.request(params);
+    },
+    likeFreet() {
+      /**
+       * Like freet
+       */
+      this.liked = !this.liked;
+      // const params = {
+      //   method: 'POST',
+      //   callback: () => {
+      //     this.$store.commit('a', {
+      //       message: 'Successfully liked freet!', status: 'success'
+      //     });
+      //   }
+      // };
+      // this.request(params);
     },
     async request(params) {
       /**
