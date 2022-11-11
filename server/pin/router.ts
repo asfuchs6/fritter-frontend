@@ -5,7 +5,7 @@ import * as freetValidator from '../freet/middleware';
 import * as pinValidator from './middleware';
 import * as util from './util';
 import PinCollection from "./collection";
-import FreetCollection from "../freet/collection";
+import UserCollection from "../user/collection";
 
 const router = express.Router();
 
@@ -20,8 +20,13 @@ const router = express.Router();
 router.get(
     '/',
     async (req: Request, res: Response, next: NextFunction) => {
-        const pinnedFreet = await PinCollection.findOne();
-        res.status(200).json(pinnedFreet);
+        if (req.query.author !== undefined) {
+            const author = await UserCollection.findOneByUsername(req.query.author as string);
+            const pinnedFreet = await PinCollection.findOneByUsername(author._id);
+            const response = pinnedFreet.map(util.constructPinResponse);
+            res.status(200).json(response);
+            return;
+        }
     },
 );
 
@@ -44,12 +49,12 @@ router.post(
         freetValidator.isFreetExists,
     ],
     async (req: Request, res: Response) => {
-        const freetToPin = await FreetCollection.findOne(req.params.freetId);
-        const existingPin = await PinCollection.findOne();
-        if (existingPin){
-            await PinCollection.deleteOne();
+        const userId = (req.session.userId as string) ?? ''; // Will not be an empty string since its validated in isUserLoggedIn
+        const existingPin = await PinCollection.findOneByUsername(userId);
+        if (existingPin) {
+            await PinCollection.deleteOne(req.params.freetId);
         }
-        const response = await PinCollection.addOne(freetToPin);
+        const response = await PinCollection.addOne(req.params.freetId, userId);
         res.status(201).json({
             message: `You successfully pinned freet ${req.params.freetId}.`,
             freet: util.constructPinResponse(response)
@@ -68,13 +73,13 @@ router.post(
  * @throws {404} - If the freetId is not valid
  */
 router.delete(
-    '/',
+    '/:freetId?',
     [
         userValidator.isUserLoggedIn,
         pinValidator.isUserAbleToUnpinFreet,
     ],
     async (req: Request, res: Response) => {
-        await PinCollection.deleteOne();
+        await PinCollection.deleteOne(req.params.freetId);
         res.status(200).json({
             message: `You successfully unpinned freet.`
         });

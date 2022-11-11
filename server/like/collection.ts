@@ -1,7 +1,8 @@
 import type {HydratedDocument, Types} from 'mongoose';
 import type {Like} from './model';
 import LikeModel from './model';
-import FreetModel, {Freet} from "../freet/model";
+import {Freet} from "../freet/model";
+import UserCollection from "../user/collection";
 
 /**
  * This file contains a class with functionality to interact with freets that users like.
@@ -16,10 +17,11 @@ class LikeCollection {
    * @param {string} content - The id of the content of the freet
    * @return {Promise<HydratedDocument<Like>>} - The newly created freet
    */
-  static async addOne(content: string): Promise<HydratedDocument<Like>> {
+  static async addOne(content: string, authorId: Types.ObjectId | string): Promise<HydratedDocument<Like>> {
     const date = new Date();
     const like = new LikeModel({
       content,
+      authorId,
       dateModified: date
     });
     await like.save(); // Saves freet to MongoDB
@@ -33,6 +35,16 @@ class LikeCollection {
   static async findAll(): Promise<Array<HydratedDocument<Like>>> {
     // Retrieves freets and sorts them from most to least recent
     return LikeModel.find({}).sort({dateModified: -1});
+  }
+  /**
+   * Get all the liked freets by given authorId
+   *
+   * @param {string} username - The username of author of the freets
+   * @return {Promise<HydratedDocument<Freet>[]>} - An array of all of the freets
+   */
+  static async findAllByUsername(username: string): Promise<Array<HydratedDocument<Like>>> {
+    const author = await UserCollection.findOneByUsername(username);
+    return LikeModel.find({authorId: author._id}).sort({dateModified: -1}).populate('authorId');
   }
 
   /**

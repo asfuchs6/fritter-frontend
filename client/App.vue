@@ -20,6 +20,9 @@ export default {
     }).then(res => res.json()).then(res => {
       const user = res.user;
       this.$store.commit('setUsername', user ? user.username : null);
+      this.$store.commit('refreshLikes');
+      this.$store.commit('refreshFlags');
+      this.$store.commit('refreshPin');
     });
 
     // Clear alerts on page refresh
@@ -40,6 +43,7 @@ body {
   padding: 0;
   margin: 0;
   font-size: 1.2em;
+  background-color: #FFECB3;
 }
 
 main {

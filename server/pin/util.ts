@@ -1,15 +1,14 @@
 import type {HydratedDocument} from 'mongoose';
 import moment from 'moment';
-import type {Pin} from './model';
+import type {Pin, PopulatedPin} from './model';
 import {Types} from "mongoose";
 
 // Update this if you add a property to the Freet type!
 type PinResponse = {
   _id: string;
-  authorId: Types.ObjectId;
-  dateCreated: Date;
-  freetId: string;
+  author: string;
   content: string;
+  dateModified: string;
 };
 
 /**
@@ -28,19 +27,17 @@ const formatDate = (date: Date): string => moment(date).format('MMMM Do YYYY, h:
  * @returns {FlagResponse} - The freet object formatted for the frontend
  */
 const constructPinResponse = (pin: HydratedDocument<Pin>): PinResponse => {
-  const pinCopy: Pin = {
+  const pinCopy: PopulatedPin = {
     ...pin.toObject({
       versionKey: false // Cosmetics; prevents returning of __v property
     })
   };
-
+  const {username} = pinCopy.authorId;
   return {
     ...pinCopy,
     _id: pinCopy._id.toString(),
-    authorId: pinCopy.authorId,
-    dateCreated: pinCopy.dateCreated,
-    freetId: pinCopy.freetId,
-    content: pinCopy.content
+    dateModified: formatDate(pin.dateModified),
+    author: username,
   };
 };
 

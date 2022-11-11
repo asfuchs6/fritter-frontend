@@ -1,6 +1,7 @@
 import type {HydratedDocument, Types} from 'mongoose';
 import type {Flag} from './model';
 import FlagModel from './model';
+import UserCollection from "../user/collection";
 
 /**
  * This file contains a class with functionality to interact with freets that users flag.
@@ -16,10 +17,11 @@ class FlagCollection {
    * @param {string} content - The id of the content of the freet
    * @return {Promise<HydratedDocument<Flag>>} - Success message
    */
-  static async addOne(content: string): Promise<HydratedDocument<Flag>> {
+  static async addOne(content: string, authorId: Types.ObjectId | string): Promise<HydratedDocument<Flag>> {
     const date = new Date();
     const flag = new FlagModel({
       content,
+      authorId,
       dateModified: date
     });
     await flag.save(); // Saves freet to MongoDB
@@ -34,7 +36,16 @@ class FlagCollection {
     // Retrieves freets and sorts them from most to least recent
     return FlagModel.find({}).sort({dateModified: -1});
   }
-
+  /**
+   * Get all the flagged freets by given authorId
+   *
+   * @param {string} username - The username of author of the freets
+   * @return {Promise<HydratedDocument<Freet>[]>} - An array of all of the freets
+   */
+  static async findAllByUsername(username: string): Promise<Array<HydratedDocument<Flag>>> {
+    const author = await UserCollection.findOneByUsername(username);
+    return FlagModel.find({authorId: author._id}).sort({dateModified: -1}).populate('authorId');
+  }
   /**
    * Find a freet by freetId
    *

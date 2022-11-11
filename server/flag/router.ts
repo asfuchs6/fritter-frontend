@@ -9,9 +9,9 @@ import FlagCollection from "./collection";
 const router = express.Router();
 
 /**
- * Get all the flagged freets
+ * Get all the flagged freets by an author
  *
- * @name GET /api/flagged
+ * @name GET /api/flagged?author=username
  *
  * @return {FlagResponse[]} - A list of all the flagged freets sorted in descending
  *                      order by date modified
@@ -20,14 +20,12 @@ router.get(
     '/',
     async (req: Request, res: Response, next: NextFunction) => {
         // Check if freetId query parameter was supplied
-        if (req.query.freetId !== undefined) {
-            next();
+        if (req.query.author !== undefined) {
+            const allFlaggedFreets = await FlagCollection.findAllByUsername(req.query.author as string);
+            const response = allFlaggedFreets.map(util.constructFlagResponse);
+            res.status(200).json(response);
             return;
         }
-
-        const allFlaggedFreets = await FlagCollection.findAll();
-        const response = allFlaggedFreets.map(util.constructFlagResponse);
-        res.status(200).json(response);
     },
 );
 
@@ -51,7 +49,8 @@ router.post(
         flagValidator.isUserAbleToFlagFreet,
     ],
     async (req: Request, res: Response) => {
-        const freet = await FlagCollection.addOne(req.params.freetId);
+        const userId = (req.session.userId as string) ?? ''; // Will not be an empty string since its validated in isUserLoggedIn
+        const freet = await FlagCollection.addOne(req.params.freetId, userId);
 
         res.status(201).json({
             message: `You successfully flagged freet ${req.params.freetId}.`,

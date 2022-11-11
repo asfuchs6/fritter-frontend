@@ -1,10 +1,11 @@
 import type {HydratedDocument} from 'mongoose';
 import moment from 'moment';
-import type {Like} from '../like/model';
+import type {Like, PopulatedLike} from '../like/model';
 
 // Update this if you add a property to the Freet type!
 type LikeResponse = {
   _id: string;
+  author: string;
   content: string;
   dateModified: string;
 };
@@ -25,16 +26,17 @@ const formatDate = (date: Date): string => moment(date).format('MMMM Do YYYY, h:
  * @returns {FreetResponse} - The freet object formatted for the frontend
  */
 const constructLikeResponse = (like: HydratedDocument<Like>): LikeResponse => {
-  const likeCopy: Like = {
+  const likeCopy: PopulatedLike = {
     ...like.toObject({
       versionKey: false // Cosmetics; prevents returning of __v property
     })
   };
-  //TODO: NEED TO DELETE SOMETHING?
+  const {username} = likeCopy.authorId;
   return {
     ...likeCopy,
     _id: likeCopy._id.toString(),
-    dateModified: formatDate(like.dateModified)
+    dateModified: formatDate(like.dateModified),
+    author: username,
   };
 };
 

@@ -129,10 +129,12 @@ form {
 article > div {
   display: flex;
   flex-direction: column;
+
 }
 
 form > article p {
   margin: 0;
+
 }
 
 form h3,
@@ -147,5 +149,6 @@ form h3 {
 textarea {
    font-family: inherit;
    font-size: inherit;
+
 }
 </style>

@@ -8,10 +8,33 @@ import LikeCollection from "./collection";
 
 const router = express.Router();
 
+// /**
+//  * Get all the liked freets
+//  *
+//  * @name GET /api/liked
+//  *
+//  * @return {LikeResponse[]} - A list of all the liked freets sorted in descending
+//  *                      order by date modified
+//  */
+// router.get(
+//     '/',
+//     async (req: Request, res: Response, next: NextFunction) => {
+//         // Check if freetId query parameter was supplied
+//         if (req.query.freetId !== undefined) {
+//             next();
+//             return;
+//         }
+//
+//         const allLikedFreets = await LikeCollection.findAll();
+//         const response = allLikedFreets.map(util.constructLikeResponse);
+//         res.status(200).json(response);
+//     },
+// );
+
 /**
- * Get all the liked freets
+ * Get all liked freets by an author
  *
- * @name GET /api/liked
+ * @name GET /api/liked?author=username
  *
  * @return {LikeResponse[]} - A list of all the liked freets sorted in descending
  *                      order by date modified
@@ -20,14 +43,12 @@ router.get(
     '/',
     async (req: Request, res: Response, next: NextFunction) => {
         // Check if freetId query parameter was supplied
-        if (req.query.freetId !== undefined) {
-            next();
+        if (req.query.author !== undefined) {
+            const allLikedFreets = await LikeCollection.findAllByUsername(req.query.author as string);
+            const response = allLikedFreets.map(util.constructLikeResponse);
+            res.status(200).json(response);
             return;
         }
-
-        const allLikedFreets = await LikeCollection.findAll();
-        const response = allLikedFreets.map(util.constructLikeResponse);
-        res.status(200).json(response);
     },
 );
 
@@ -51,7 +72,8 @@ router.post(
         likeValidator.isUserAbleToLikeFreet,
     ],
     async (req: Request, res: Response) => {
-        const freet = await LikeCollection.addOne(req.params.freetId);
+        const userId = (req.session.userId as string) ?? ''; // Will not be an empty string since its validated in isUserLoggedIn
+        const freet = await LikeCollection.addOne(req.params.freetId, userId);
 
         res.status(201).json({
             message: `You successfully liked freet ${req.params.freetId}.`,

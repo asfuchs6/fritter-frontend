@@ -52,18 +52,20 @@
       Posted at {{ freet.dateModified }}
       <i v-if="freet.edited">(edited)</i>
     </p>
-    <button
-        v-if="!liked"
-        @click="likeFreet"
-    >
-      Like this Freet!
-    </button>
-    <button
-        v-else
-        @click="likeFreet"
-    >
-      💙 Freet has been liked!
-    </button>
+    <div class="freet-action-info">
+      <LikeComponent
+          v-if="$store.state.username !== null && !editing"
+          :freet="freet">
+      </LikeComponent>
+      <FlagComponent
+          v-if="$store.state.username !== null && !editing"
+          :freet="freet">
+      </FlagComponent>
+      <PinComponent
+          v-if="$store.state.username !== null && !editing"
+          :freet="freet">
+      </PinComponent>
+    </div>
     <section class="alerts">
       <article
         v-for="(status, alert, index) in alerts"
@@ -77,8 +79,12 @@
 </template>
 
 <script>
+import LikeComponent from './LikeComponent';
+import FlagComponent from "./FlagComponent";
+import PinComponent from "./PinComponent";
 export default {
   name: 'FreetComponent',
+  components: {LikeComponent, FlagComponent, PinComponent},
   props: {
     // Data from the stored freet
     freet: {
@@ -145,21 +151,6 @@ export default {
       };
       this.request(params);
     },
-    likeFreet() {
-      /**
-       * Like freet
-       */
-      this.liked = !this.liked;
-      // const params = {
-      //   method: 'POST',
-      //   callback: () => {
-      //     this.$store.commit('a', {
-      //       message: 'Successfully liked freet!', status: 'success'
-      //     });
-      //   }
-      // };
-      // this.request(params);
-    },
     async request(params) {
       /**
        * Submits a request to the freet's endpoint
@@ -199,5 +190,10 @@ export default {
     border: 1px solid #111;
     padding: 20px;
     position: relative;
+  background-color: #FDD99C;
+}
+
+.freet-action-info {
+  display: flex;
 }
 </style>
